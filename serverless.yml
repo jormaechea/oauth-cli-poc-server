@@ -1,0 +1,108 @@
+service: OAuthProofOfConcept
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 192
+  stage: ${opt:stage, 'local'}
+  region: ${opt:region, 'us-east-1'}
+  endpointType: REGIONAL
+  apiName: OAuth Proof of Concept
+  environment:
+    NOTES_TABLE_NAME: ${self:custom.tableNames.notes}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:Query
+      Resource:
+        - 'arn:aws:dynamodb:*:*:table/notes'
+        - 'arn:aws:dynamodb:*:*:table/notes/index/*'
+
+package:
+  exclude:
+    - 'node_modules/aws-sdk/**'
+    - 'tests/**'
+    - '.eslintrc.js'
+    - 'package-lock.json'
+
+custom:
+  tableNames:
+    notes: notes
+  authorizer:
+    name: Auth0Authorizer
+    resultTtlInSeconds: 0
+    identitySource: method.request.header.Authorization
+    identityValidationExpression: Bearer .*
+    type: token
+
+functions:
+  Auth0Authorizer:
+    handler: src/authorizers/auth0-authorizer.handler
+  GetManyNotes:
+    handler: src/functions/notes.getMany
+    events:
+      - http:
+          integration: lambda-proxy
+          method: get
+          path: /notes
+          authorizer: ${self:custom.authorizer}
+  GetOneNote:
+    handler: src/functions/notes.getOne
+    events:
+      - http:
+          integration: lambda-proxy
+          method: get
+          path: /notes/{id}
+          authorizer: ${self:custom.authorizer}
+  CreateOneNote:
+    handler: src/functions/notes.createOne
+    events:
+      - http:
+          integration: lambda-proxy
+          method: post
+          path: /notes
+          authorizer: ${self:custom.authorizer}
+  UpdateOneNote:
+    handler: src/functions/notes.updateOne
+    events:
+      - http:
+          integration: lambda-proxy
+          method: put
+          path: /notes/{id}
+          authorizer: ${self:custom.authorizer}
+  DeleteOneNote:
+    handler: src/functions/notes.deleteOne
+    events:
+      - http:
+          integration: lambda-proxy
+          method: delete
+          path: /notes/{id}
+          authorizer: ${self:custom.authorizer}
+
+plugins:
+  - serverless-offline
+
+resources:
+  Resources:
+    NotesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        BillingMode: PROVISIONED
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        TableName: ${self:custom.tableNames.notes}
