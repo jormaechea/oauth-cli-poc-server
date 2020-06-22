@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://jormaechea@github.com/jormaechea/oauth-cli-poc-server.git"
+    "url": "git+https://github.com/jormaechea/oauth-cli-poc-server.git"
   },
   "keywords": [
     "oauth",
