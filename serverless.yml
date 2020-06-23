@@ -34,7 +34,7 @@ custom:
     notes: notes
   authorizer:
     name: Auth0Authorizer
-    resultTtlInSeconds: 0
+    resultTtlInSeconds: 300
     identitySource: method.request.header.Authorization
     identityValidationExpression: Bearer .*
     type: token

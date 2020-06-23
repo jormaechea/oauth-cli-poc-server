@@ -40,7 +40,7 @@ const getPolicyDocument = (effect, resource) => ({
 	Statement: [{
 		Action: 'execute-api:Invoke',
 		Effect: effect,
-		Resource: resource
+		Resource: resource.replace(/\/.+\/.+\/.+$/, '/*')
 	}]
 });
 
