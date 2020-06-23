@@ -76,6 +76,7 @@ module.exports.handler = async event => {
 		const policy = await tryToAuthorize(event);
 		return policy;
 	} catch(e) {
-		return `Unauthorized: ${e.message}`;
+		console.log(e.message);
+		throw new Error('Unauthorized');
 	}
 };
